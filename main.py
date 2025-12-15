@@ -2987,6 +2987,16 @@ async def dialogue_command(ctx, duration: int = 5):
             async def recv_audio(self, user, audio):
                 async with self.lock:
                     self.audio_data.extend(audio.pcm)
+            
+            # Обязательные методы для Linux/Railway
+            def cleanup(self):
+                """Очистка ресурсов"""
+                self.audio_data.clear()
+            
+            def write(self, data):
+                """Запись аудиоданных"""
+                if data:
+                    self.audio_data.extend(data)
         
         sink = DialogSink()
         
