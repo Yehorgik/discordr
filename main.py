@@ -2162,6 +2162,11 @@ async def listen_command(ctx, duration: int = 5):
     Используй: !подключиться
     """
     
+    # Проверка: команда работает только локально, не на Railway
+    if voice_recv and not hasattr(voice_recv.VoiceRecvClient, 'record'):
+        await ctx.send("❌ Команда `!слушать` недоступна на Railway/Linux. Используйте локально на Windows.")
+        return
+    
     if not isinstance(ctx.channel, discord.DMChannel):
         await ctx.send("❌ Эту команду можно использовать только в ДМ")
         return
@@ -2969,6 +2974,11 @@ async def dialogue_command(ctx, duration: int = 5):
     ТРЕБУЕТ: Бот должен быть в голосовом канале!
     Используй: !подключиться
     """
+    
+    # Проверка: команда работает только локально, не на Railway
+    if voice_recv and not hasattr(voice_recv.VoiceRecvClient, 'record'):
+        await ctx.send("❌ Команда `!диалог` недоступна на Railway/Linux. Используйте локально на Windows.")
+        return
     
     if not ctx.author.voice:
         await ctx.send("❌ Ты не в голосовом канале! Зайди в голосовой канал и напиши `!подключиться`")
