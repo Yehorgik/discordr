@@ -1593,7 +1593,12 @@ async def join_voice(ctx):
         await send_voice_message(current_voice_client, comment)
         
     except Exception as e:
-        await ctx.send(f'❌ Ошибка подключения: {e}')
+        error_msg = f'❌ Ошибка подключения: {type(e).__name__}: {str(e)}'
+        print(f"[ERROR] {error_msg}")
+        log_event("ERROR", error_msg)
+        await ctx.send(error_msg)
+        import traceback
+        traceback.print_exc()
 
 @bot.command(name='отключиться', aliases=['leave', 'disconnect'])
 async def leave_voice(ctx):
@@ -3074,7 +3079,12 @@ async def dialogue_command(ctx, duration: int = 5):
                 vc = await user_channel.connect()
                 await asyncio.sleep(0.5)
             except Exception as e:
-                await ctx.send(f"Ошибка переподключения: {e}")
+                error_msg = f"Ошибка переподключения: {type(e).__name__}: {str(e)}"
+                print(f"[ERROR] {error_msg}")
+                log_event("ERROR", error_msg)
+                await ctx.send(error_msg)
+                import traceback
+                traceback.print_exc()
                 return
     else:
         try:
@@ -3082,7 +3092,12 @@ async def dialogue_command(ctx, duration: int = 5):
             vc = await user_channel.connect()
             await asyncio.sleep(0.5)
         except Exception as e:
-            await ctx.send(f"Ошибка подключения: {e}")
+            error_msg = f"Ошибка подключения: {type(e).__name__}: {str(e)}"
+            print(f"[ERROR] {error_msg}")
+            log_event("ERROR", error_msg)
+            await ctx.send(error_msg)
+            import traceback
+            traceback.print_exc()
             return
     
     await ctx.send(f"[LISTEN] Слушаю микрофон {duration} сек...")
