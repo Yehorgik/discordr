@@ -2184,18 +2184,24 @@ async def listen_command(ctx, duration: int = 5):
     try:
         status_msg = await ctx.send(f"🎙️ **Начинаю запись** ({duration} сек)...")
         
-        # Создаем sink для записи
-        class RecordSink(voice_recv.AudioSink):
+        # Создаем sink для записи (простой класс, не абстрактный)
+        class RecordSink:
             def __init__(self):
                 self.audio_data = bytearray()
-                self.lock = asyncio.Lock()
             
             async def wants_opus(self):
                 return False
             
             async def recv_audio(self, user, audio):
-                async with self.lock:
+                if audio and hasattr(audio, 'pcm'):
                     self.audio_data.extend(audio.pcm)
+            
+            def cleanup(self):
+                self.audio_data.clear()
+            
+            def write(self, data):
+                if data:
+                    self.audio_data.extend(data)
         
         sink = RecordSink()
         
@@ -2975,26 +2981,22 @@ async def dialogue_command(ctx, duration: int = 5):
     try:
         status_msg = await ctx.send(f"🎙️ **[LISTEN]** Слушаю канал {duration} сек...")
         
-        # Создаем sink для записи
-        class DialogSink(voice_recv.AudioSink):
+        # Создаем sink для записи (простой класс, не абстрактный)
+        class DialogSink:
             def __init__(self):
                 self.audio_data = bytearray()
-                self.lock = asyncio.Lock()
             
             async def wants_opus(self):
                 return False
             
             async def recv_audio(self, user, audio):
-                async with self.lock:
+                if audio and hasattr(audio, 'pcm'):
                     self.audio_data.extend(audio.pcm)
             
-            # Обязательные методы для Linux/Railway
             def cleanup(self):
-                """Очистка ресурсов"""
                 self.audio_data.clear()
             
             def write(self, data):
-                """Запись аудиоданных"""
                 if data:
                     self.audio_data.extend(data)
         
