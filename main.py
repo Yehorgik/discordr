@@ -2210,14 +2210,22 @@ async def listen_command(ctx, duration: int = 5):
         
         sink = RecordSink()
         
-        # Начинаем запись
-        target_vc.start_recording(sink, None, target_vc.guild)
+        # Начинаем запись (используем record() вместо start_recording)
+        try:
+            target_vc.record(sink)
+        except AttributeError:
+            # Fallback если нет record()
+            await ctx.send("❌ Метод запись недоступен на этом хосте")
+            return
         
         # Ждем
         await asyncio.sleep(duration)
         
         # Стопим запись
-        target_vc.stop_recording()
+        try:
+            target_vc.stop_recording()
+        except:
+            pass
         
         if not sink.audio_data:
             await ctx.send("❌ Не было записано никакого звука.")
@@ -2913,12 +2921,14 @@ async def record(ctx):
         else:
             vc = ctx.voice_client
 
-        # Начинаем запись (MP3)
-        vc.start_recording(
-            discord.sinks.MP3Sink(),
-            record_finished_callback,
-            ctx
-        )
+        # Начинаем запись (используем record вместо start_recording)
+        try:
+            vc.record(discord.sinks.WaveSink())
+            await ctx.send("🎙️ Начинаю запись...")
+        except AttributeError:
+            # Fallback
+            await ctx.send("❌ Метод запись недоступен")
+            return
         
         await ctx.send("🔴 Запись пошла! (10 секунд)")
         await asyncio.sleep(10)
@@ -3007,8 +3017,12 @@ async def dialogue_command(ctx, duration: int = 5):
         
         sink = DialogSink()
         
-        # Начинаем запись
-        vc.start_recording(sink, None, vc.guild)
+        # Начинаем запись (используем record вместо start_recording)
+        try:
+            vc.record(sink)
+        except AttributeError:
+            await ctx.send("❌ Метод запись недоступен на этом хосте")
+            return
         
         # Ждем нужное время
         await asyncio.sleep(duration)
