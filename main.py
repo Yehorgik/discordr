@@ -36,7 +36,21 @@ if sys.platform == 'win32':
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
+# Определяем путь к FFmpeg (кроссплатформенный)
+def get_ffmpeg_path():
+    """Возвращает путь к FFmpeg в зависимости от ОС"""
+    if sys.platform == 'win32':
+        # Windows
+        return r"C:\ffmpeg-master-latest-win64-gpl-shared\bin\ffmpeg.exe"
+    else:
+        # Linux/Mac - FFmpeg установлен системно
+        return "ffmpeg"
+
+FFMPEG_PATH = get_ffmpeg_path()
+
 print(f"[PYTHON] {sys.version.split()[0]} ({sys.executable})")
+print(f"[SYSTEM] OS: {sys.platform}")
+print(f"[FFMPEG] Path: {FFMPEG_PATH}")
 
 # ======================== СИСТЕМА ЛОГИРОВАНИЯ ========================
 def log_event(event_type: str, details: str):
@@ -214,8 +228,8 @@ async def send_voice_message(voice_client, text):
         await asyncio.sleep(0.3)
         
         # 2. Воспроизводим в голосовой канал через FFmpeg
-        ffmpeg_path = r"C:\ffmpeg-master-latest-win64-gpl-shared\bin\ffmpeg.exe"
-        if not os.path.exists(ffmpeg_path):
+        ffmpeg_path = FFMPEG_PATH
+        if not os.path.exists(ffmpeg_path) and sys.platform == 'win32':
             ffmpeg_path = "ffmpeg"
         
         print(f"🎵 FFmpeg: {ffmpeg_path}")
