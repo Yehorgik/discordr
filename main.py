@@ -24,6 +24,7 @@ import threading
 import sys
 import subprocess
 import wave
+import random
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
@@ -98,6 +99,8 @@ report_processing = set()  # Блокирую дублирование жало�
 # Подслушивание: {guild_id: {'vc': VoiceClient, 'task': asyncio.Task, 'sink': sink_obj, 'file': path}}
 listening_sessions = {}
 active_voice_channels = {} # guild_id -> channel_id (для автоподключения)
+user_cooldowns = {}  # user_id -> time последней команды (для кулдауна)
+COOLDOWN_SECONDS = 20  # Кулдаун между командами (20 секунд)
 
 # Системы
 user_warnings = {}  # Варны юзеров {user_id: count}
@@ -697,6 +700,37 @@ async def on_message(message):
         return
     
     content_lower = message.content.lower()
+    
+    # Кулдаун: проверяем, не командует ли пользователь слишком часто
+    user_id = message.author.id
+    now = time.time()
+    if user_id in user_cooldowns:
+        time_passed = now - user_cooldowns[user_id]
+        if time_passed < COOLDOWN_SECONDS:
+            return  # Игнорируем сообщение (кулдаун активен)
+    
+    user_cooldowns[user_id] = now
+    
+    # Триггер "кимпитяо" или "кимпинтяо" — отправляем фотку из папки
+    if ('кимпитяо' in content_lower or 'кимпинтяо' in content_lower) and not content_lower.strip().startswith('!'):
+        try:
+            photos_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'photos')
+            os.makedirs(photos_dir, exist_ok=True)
+            
+            photo_files = [f for f in os.listdir(photos_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+            
+            if photo_files:
+                random_photo = random.choice(photo_files)
+                photo_path = os.path.join(photos_dir, random_photo)
+                
+                with open(photo_path, 'rb') as f:
+                    await message.channel.send(file=discord.File(f, filename=random_photo))
+            else:
+                await message.channel.send('📁 Папка `photos` пуста. Добавь фотки!')
+        except Exception as e:
+            await message.channel.send(f'❌ Ошибка отправки фотки: {e}')
+        
+        return
 
     # Проверка на громкость (например "47%" или "100%")
     import re as regex_module
